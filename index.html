@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Monitoramento de Unidades - INTECS</title>
+    <style>
+        :root {
+            --bg-color: #f4f6fa;
+            --card-bg: #ffffff;
+            --success: #28a745;
+            --error: #dc3545;
+            --waiting: #fd7e14;
+            --text-primary: #333;
+            --text-secondary: #666;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            /* Evita scroll horizontal indesejado no mobile */
+            overflow-x: hidden;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            /* Permite quebrar linha se faltar espaço */
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+        /* Container dos controles (Data e Botão) */
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .last-update {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: #fff;
+            padding: 10px 15px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e1e4e8;
+            white-space: nowrap;
+            /* Não quebra a data em duas linhas */
+        }
+
+        .calendar-icon {
+            width: 16px;
+            height: 16px;
+            stroke: var(--text-secondary);
+            flex-shrink: 0;
+            /* Impede o ícone de amassar */
+        }
+
+        .grid {
+            display: grid;
+            /* Responsividade automática: Mínimo de 280px ou ocupa tudo */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            /* Arredondamento mais moderno */
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
+            text-align: center;
+            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .unit-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #444;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
+            min-width: 140px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .timer-display {
+            font-size: 13px;
+            color: var(--waiting);
+            font-weight: 600;
+            margin-top: 10px;
+            height: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .timer-visible {
+            opacity: 1;
+            animation: pulse-text 1s infinite;
+        }
+
+        /* Animações e Cores */
+        @keyframes pulse-text {
+            0% {
+                opacity: 0.7;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.7;
+            }
+        }
+
+        .status-loading {
+            background-color: #e0e0e0;
+            color: #666;
+        }
+
+        .status-online {
+            background-color: var(--success);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .status-offline {
+            background-color: var(--error);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+            animation: pulse-bg 2s infinite;
+        }
+
+        @keyframes pulse-bg {
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+            }
+        }
+
+        /* Spinner */
+        .spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border-left-color: #666;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .refresh-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .refresh-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* =========================================
+           MEDIA QUERIES (RESPONSIVIDADE CELULAR)
+           ========================================= */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                /* Menos borda no celular */
+            }
+
+            .header {
+                flex-direction: column;
+                /* Empilha Título e Controles */
+                align-items: center;
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+                /* Título um pouco menor */
+                justify-content: center;
+                width: 100%;
+            }
+
+            .controls {
+                width: 100%;
+                justify-content: space-between;
+                /* Espalha data e botão */
+            }
+
+            .last-update {
+                font-size: 12px;
+                /* Fonte menor na data */
+                padding: 8px 12px;
+                flex-grow: 1;
+                /* Ocupa espaço disponível */
+                justify-content: center;
+            }
+
+            .refresh-btn {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+                /* Força 1 coluna no mobile */
+                gap: 15px;
+            }
+
+            .card {
+                padding: 15px;
+                /* Menos padding dentro do card */
+            }
+
+            .unit-name {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>🌐 Status de Conexão</h1>
+        <div class="controls">
+            <div id="last-update" class="last-update">Carregando data...</div>
+            <button onclick="atualizarStatus()" class="refresh-btn">↻ Atualizar</button>
+        </div>
+    </div>
+
+    <div id="grid-container" class="grid"></div>
+
+    <script>
+        // CONFIGURAÇÕES
+        const TIMEOUT_MS = 300000; // 5 minutos
+        const SHOW_TIMER_DELAY_MS = 10000; // 10 segundos
+
+        // Ícone SVG de Calendário
+        const svgCalendar = `
+            <svg class="calendar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+        `;
+
+        const unidades = [
+            { nome: "SÃO MIGUEL", url: "http://ssintecsbr.ddns.com.br:3000/api/public/dashboard/d1f43c3c-459b-4eaf-a5cb-c1b4dbfd00fd/dashcard/3443/card/1545" },
+            { nome: "CITY JARAGUÁ", url: "http://ssintecsbr.ddns.com.br:3000/api/public/dashboard/d1f43c3c-459b-4eaf-a5cb-c1b4dbfd00fd/dashcard/3434/card/1543" },
+            { nome: "JARAGUÁ", url: "http://ssintecsbr.ddns.com.br:3000/api/public/dashboard/d1f43c3c-459b-4eaf-a5cb-c1b4dbfd00fd/dashcard/3445/card/1546" },
+            { nome: "BRASILÂNDIA", url: "http://ssintecsbr.ddns.com.br:3000/api/public/dashboard/d1f43c3c-459b-4eaf-a5cb-c1b4dbfd00fd/dashcard/3435/card/1544" },
+            { nome: "GUAIANASES", url: "http://ssintecsbr.ddns.com.br:3000/api/public/dashboard/d1f43c3c-459b-4eaf-a5cb-c1b4dbfd00fd/dashcard/3444/card/1547" },
+            { nome: "TIRADENTES", url: "http://ssintecsbr.ddns.com.br:3000/api/public/dashboard/d1f43c3c-459b-4eaf-a5cb-c1b4dbfd00fd/dashcard/3447/card/1548" },
+            { nome: "M'BOI MIRIM", url: "http://ssintecsbr.ddns.com.br:3000/api/public/dashboard/d1f43c3c-459b-4eaf-a5cb-c1b4dbfd00fd/dashcard/3446/card/1549" }
+        ];
+
+        const container = document.getElementById('grid-container');
+
+        function renderizarCards() {
+            container.innerHTML = '';
+            unidades.forEach((unidade, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="unit-name">🛒 ${unidade.nome}</div>
+                    <div id="status-${index}" class="status-badge status-loading">
+                        <span class="spinner"></span> Verificando...
+                    </div>
+                    <div id="timer-${index}" class="timer-display"></div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function checkUnitStatus(originalUrl) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+            try {
+                const proxyUrl = `https://intecs-internets.vercel.app/api/proxy?url=${encodeURIComponent(originalUrl)}`;
+                const response = await fetch(proxyUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) throw new Error('Erro HTTP Proxy');
+
+                const json = await response.json();
+                const statusText = json.data?.rows?.[0]?.[0];
+
+                if (statusText && String(statusText).toUpperCase().includes("ONLINE")) {
+                    return true;
+                } else {
+                    return false;
+                }
+
+            } catch (error) {
+                console.error("Erro na verificação:", error);
+                return false;
+            }
+        }
+
+        async function atualizarStatus() {
+            const agora = new Date();
+            const dataHora = agora.toLocaleString('pt-BR', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+
+            document.getElementById('last-update').innerHTML = `${svgCalendar} ${dataHora}`;
+
+            unidades.forEach(async (unidade, index) => {
+                const elementoStatus = document.getElementById(`status-${index}`);
+                const elementoTimer = document.getElementById(`timer-${index}`);
+
+                // 1. Reset visual
+                elementoStatus.className = 'status-badge status-loading';
+                elementoStatus.innerHTML = '<span class="spinner"></span> Verificando...';
+
+                elementoTimer.innerText = '';
+                elementoTimer.classList.remove('timer-visible');
+
+                // 2. Lógica do Timer
+                let contadorSegundos = 10;
+                let intervaloContador = null;
+
+                const delayTimerId = setTimeout(() => {
+                    elementoTimer.innerText = `⏱ Aguardando: ${contadorSegundos}s`;
+                    elementoTimer.classList.add('timer-visible');
+
+                    intervaloContador = setInterval(() => {
+                        contadorSegundos++;
+                        elementoTimer.innerText = `⏱ Aguardando: ${contadorSegundos}s`;
+                    }, 1000);
+
+                }, SHOW_TIMER_DELAY_MS);
+
+                // 3. Executa a Requisição
+                const isOnline = await checkUnitStatus(unidade.url);
+
+                // 4. Limpa Timers
+                clearTimeout(delayTimerId);
+                if (intervaloContador) clearInterval(intervaloContador);
+                elementoTimer.innerText = '';
+                elementoTimer.classList.remove('timer-visible');
+
+                // 5. Atualiza Status Final
+                if (isOnline) {
+                    elementoStatus.className = 'status-badge status-online';
+                    elementoStatus.innerHTML = '🟢 ONLINE';
+                } else {
+                    elementoStatus.className = 'status-badge status-offline';
+                    elementoStatus.innerHTML = '🔴 OFFLINE';
+                }
+            });
+        }
+
+        renderizarCards();
+        atualizarStatus();
+
+        setInterval(atualizarStatus, 300000); // 5 Minutos
+
+    </script>
+</body>
+
+</html>
