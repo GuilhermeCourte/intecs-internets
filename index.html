@@ -113,29 +113,50 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 12px 25px;
+            padding: 8px 20px;
             border-radius: 50px;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 14px;
             color: white;
-            min-width: 140px;
+            min-width: 120px;
             transition: all 0.3s ease;
             position: relative;
             z-index: 2;
         }
 
+        .status-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            flex-shrink: 0;
+            vertical-align: middle;
+        }
+
+        .cart-icon {
+            width: 18px;
+            height: 18px;
+            stroke: #444;
+            margin-right: 5px;
+            flex-shrink: 0;
+            vertical-align: text-bottom;
+        }
+
         .timer-display {
-            font-size: 13px;
+            font-size: 11px;
             color: var(--waiting);
             font-weight: 600;
-            margin-top: 10px;
-            height: 20px;
+            margin-top: 0;
+            height: 0;
             opacity: 0;
-            transition: opacity 0.3s;
+            overflow: hidden;
+            transition: all 0.3s ease;
         }
 
         .timer-visible {
             opacity: 1;
+            height: auto;
+            margin-top: 5px;
+            margin-bottom: 2px;
             animation: pulse-text 1s infinite;
         }
 
@@ -266,43 +287,44 @@
 
             .grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
+                gap: 8px;
             }
 
             .card {
-                padding: 10px;
+                padding: 8px;
             }
 
             .unit-name {
-                font-size: 13px;
-                margin-bottom: 8px;
+                font-size: 12px;
+                margin-bottom: 5px;
             }
 
             .status-badge {
-                padding: 8px 12px;
-                font-size: 13px;
+                padding: 6px 2px;
+                font-size: 12px;
                 min-width: auto;
                 width: 100%;
                 box-sizing: border-box;
+                border-radius: 6px;
             }
 
             .status-icon {
-                width: 16px;
-                height: 16px;
+                width: 14px;
+                height: 14px;
                 margin-right: 4px;
             }
 
             .cart-icon {
-                width: 16px;
-                height: 16px;
+                width: 14px;
+                height: 14px;
                 margin-right: 4px;
             }
 
             .spinner {
-                width: 12px;
-                height: 12px;
+                width: 10px;
+                height: 10px;
                 border-width: 2px;
-                margin-right: 5px;
+                margin-right: 4px;
             }
         }
     </style>
