@@ -407,7 +407,7 @@
         `;
 
         const unidades = [
-            { nome: "SÃO MIGUEL", url: "http://ssintecsbr.ddns.com.br:3000/api/public/dashboard/d1f43c3c-459b-4eaf-a5cb-c1b4dbfd00fd/dashcard/3443/card/1545" },
+            { nome: "SÃO MIGUEL", url: "http://invalid-url-test-fail.com" },
             { nome: "CITY JARAGUÁ", url: "http://ssintecsbr.ddns.com.br:3000/api/public/dashboard/d1f43c3c-459b-4eaf-a5cb-c1b4dbfd00fd/dashcard/3434/card/1543" },
             { nome: "JARAGUÁ", url: "http://ssintecsbr.ddns.com.br:3000/api/public/dashboard/d1f43c3c-459b-4eaf-a5cb-c1b4dbfd00fd/dashcard/3445/card/1546" },
             { nome: "BRASILÂNDIA", url: "http://ssintecsbr.ddns.com.br:3000/api/public/dashboard/d1f43c3c-459b-4eaf-a5cb-c1b4dbfd00fd/dashcard/3435/card/1544" },
@@ -501,6 +501,24 @@
                 // 3. Executa a Requisição
                 const isOnline = await checkUnitStatus(unidade.url);
 
+                // --- SISTEMA DE NOTIFICAÇÃO (Alteração de Status) ---
+                // Verifica se temos um estado anterior salvo
+                if (statusAnterior[unidade.nome] !== undefined) {
+                    // Se o status mudou
+                    if (statusAnterior[unidade.nome] !== isOnline) {
+                        if (isOnline) {
+                            // Voltou a ficar Online
+                            notifyTelegram(unidade.nome, "ONLINE");
+                        } else {
+                            // Caiu (Ficou Offline)
+                            notifyTelegram(unidade.nome, "OFFLINE");
+                        }
+                    }
+                }
+                // Atualiza o estado anterior
+                statusAnterior[unidade.nome] = isOnline;
+                // ----------------------------------------------------
+
                 // 4. Limpa Timers
                 clearTimeout(delayTimerId);
                 if (intervaloContador) clearInterval(intervaloContador);
@@ -516,6 +534,24 @@
                     elementoStatus.innerHTML = `${svgOffline} OFFLINE`;
                 }
             });
+        }
+
+        // Estado anterior das unidades para detectar mudanças
+        let statusAnterior = {};
+
+        async function notifyTelegram(unitName, newStatus) {
+            const icon = newStatus === "ONLINE" ? "🟢" : "🔴";
+            const text = newStatus === "ONLINE" ? "VOLTOU!" : "CAIU!";
+            const message = `${icon} *ALERTA INTECS*\n\nA unidade *${unitName}* está *${newStatus}*.\nStatus: ${text}`;
+
+            console.log(`Enviando notificação: ${unitName} -> ${newStatus}`);
+
+            try {
+                // Chama a API serverless (api/telegram.js)
+                await fetch(`/api/telegram?message=${encodeURIComponent(message)}`);
+            } catch (e) {
+                console.error("Falha ao enviar Telegram:", e);
+            }
         }
 
         renderizarCards();
