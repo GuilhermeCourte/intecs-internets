@@ -5,49 +5,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Monitoramento de Unidades - INTECS</title>
+
+    <!-- Pré-conexão para performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            --bg-color: #f4f6fa;
+            /* Palette: Tech Utility (Slate & Emerald) */
+            --bg-color: #f8fafc;
+            /* Slate 50 */
             --card-bg: #ffffff;
-            --success: #28a745;
-            --error: #dc3545;
-            --waiting: #fd7e14;
-            --text-primary: #333;
-            --text-secondary: #666;
+            --card-border: #e2e8f0;
+            /* Slate 200 */
+            --card-border-hover: #cbd5e1;
+            /* Slate 300 */
+
+            --text-primary: #0f172a;
+            /* Slate 900 */
+            --text-secondary: #64748b;
+            /* Slate 500 */
+
+            --success-bg: #10b981;
+            /* Emerald 500 */
+            --success-shadow: rgba(16, 185, 129, 0.25);
+
+            --error-bg: #ef4444;
+            /* Red 500 */
+            --error-shadow: rgba(239, 68, 68, 0.25);
+
+            --waiting: #f59e0b;
+            /* Amber 500 */
+
+            --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+            --radius-card: 8px;
+            --radius-badge: 6px;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: var(--font-main);
             background-color: var(--bg-color);
+            color: var(--text-primary);
             margin: 0;
-            padding: 20px;
-            /* Evita scroll horizontal indesejado no mobile */
+            padding: 24px;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            /* Crisp text */
         }
 
+        /* HEADER */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 32px;
             flex-wrap: wrap;
-            /* Permite quebrar linha se faltar espaço */
-            gap: 15px;
+            gap: 16px;
         }
 
         .header h1 {
-            font-size: 24px;
+            font-size: 20px;
+            font-weight: 700;
             color: var(--text-primary);
             display: flex;
             align-items: center;
             gap: 10px;
             margin: 0;
+            letter-spacing: -0.02em;
         }
 
-        /* Container dos controles (Data e Botão) */
         .controls {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
         }
 
@@ -55,166 +85,164 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 13px;
+            font-weight: 500;
             color: var(--text-secondary);
             background: #fff;
-            padding: 10px 15px;
-            border-radius: 20px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e1e4e8;
+            padding: 8px 16px;
+            border-radius: 999px;
+            /* Pill shape for meta-data */
+            border: 1px solid var(--card-border);
             white-space: nowrap;
-            /* Não quebra a data em duas linhas */
         }
 
-        .calendar-icon {
-            width: 16px;
-            height: 16px;
-            stroke: var(--text-secondary);
-            flex-shrink: 0;
-            /* Impede o ícone de amassar */
+        .refresh-btn {
+            background-color: var(--text-primary);
+            /* Dark authoritative button */
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            font-family: var(--font-main);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* Springy */
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
+        .refresh-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+            background-color: #1e293b;
+        }
+
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+
+        /* GRID */
         .grid {
             display: grid;
-            /* Responsividade automática: Mínimo de 280px ou ocupa tudo */
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
+            /* Auto-fit for large screens, but we'll override for mobile */
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
         }
 
+        /* CARD (Tech Utility Style) */
         .card {
             background: var(--card-bg);
-            border-radius: 12px;
-            /* Arredondamento mais moderno */
+            border-radius: var(--radius-card);
+            border: 1px solid var(--card-border);
             padding: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.04);
             text-align: center;
-            transition: transform 0.2s;
             position: relative;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s ease-out;
+            /* No default shadow, just border */
+        }
+
+        .card:hover {
+            border-color: var(--card-border-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
         }
 
         .unit-name {
-            font-size: 16px;
-            font-weight: 700;
-            color: #444;
-            margin-bottom: 15px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
             text-transform: uppercase;
+            letter-spacing: 0.03em;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
+        /* ICONS */
+        .icon-base {
+            width: 18px;
+            height: 18px;
+            stroke-width: 2px;
+            flex-shrink: 0;
+            display: inline-block;
+            /* Fix desktop visibility */
+        }
+
+        .unit-icon {
+            stroke: var(--text-secondary);
+        }
+
+        /* STATUS BADGE */
         .status-badge {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 8px 20px;
-            border-radius: 50px;
-            font-weight: bold;
+            padding: 8px 24px;
+            border-radius: var(--radius-badge);
+            font-weight: 600;
             font-size: 14px;
             color: white;
             min-width: 120px;
-            transition: all 0.3s ease;
-            position: relative;
-            z-index: 2;
-        }
-
-        .status-icon {
-            width: 20px;
-            height: 20px;
-            margin-right: 8px;
-            flex-shrink: 0;
-            vertical-align: middle;
-        }
-
-        .cart-icon {
-            width: 18px;
-            height: 18px;
-            stroke: #444;
-            margin-right: 5px;
-            flex-shrink: 0;
-            vertical-align: text-bottom;
-        }
-
-        .timer-display {
-            font-size: 11px;
-            color: var(--waiting);
-            font-weight: 600;
-            margin-top: 0;
-            height: 0;
-            opacity: 0;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .timer-visible {
-            opacity: 1;
-            height: auto;
-            margin-top: 5px;
-            margin-bottom: 2px;
-            animation: pulse-text 1s infinite;
-        }
-
-        /* Animações e Cores */
-        @keyframes pulse-text {
-            0% {
-                opacity: 0.7;
-            }
-
-            50% {
-                opacity: 1;
-            }
-
-            100% {
-                opacity: 0.7;
-            }
+            transition: all 0.2s;
+            gap: 8px;
+            /* Tech Utility: Slight separation via border */
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
         }
 
         .status-loading {
-            background-color: #e0e0e0;
-            color: #666;
+            background-color: #f1f5f9;
+            /* Slate 100 */
+            color: var(--text-secondary);
+            border: 1px solid #e2e8f0;
+            box-shadow: none;
+            text-shadow: none;
         }
 
         .status-online {
-            background-color: var(--success);
-            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            background-color: var(--success-bg);
+            box-shadow: 0 2px 8px var(--success-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         .status-offline {
-            background-color: var(--error);
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-            animation: pulse-bg 2s infinite;
+            background-color: var(--error-bg);
+            box-shadow: 0 2px 8px var(--error-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            animation: soft-pulse 2s infinite;
         }
 
-        @keyframes pulse-bg {
+        @keyframes soft-pulse {
             0% {
-                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+                opacity: 1;
             }
 
-            70% {
-                box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+            50% {
+                opacity: 0.85;
             }
 
             100% {
-                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+                opacity: 1;
             }
         }
 
-        /* Spinner */
+        /* SPINNER */
         .spinner {
-            border: 3px solid rgba(0, 0, 0, 0.1);
-            width: 16px;
-            height: 16px;
+            border: 2px solid rgba(100, 116, 139, 0.2);
+            /* Slate 500, 20% */
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
-            border-left-color: #666;
-            animation: spin 1s linear infinite;
+            border-left-color: var(--text-secondary);
+            animation: spin 0.8s linear infinite;
             display: inline-block;
-            margin-right: 8px;
         }
 
         @keyframes spin {
@@ -227,103 +255,95 @@
             }
         }
 
-        .refresh-btn {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
+        /* TIMER */
+        .timer-display {
+            font-size: 11px;
+            color: var(--waiting);
+            font-weight: 600;
+            height: 0;
+            margin: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
         }
 
-        .refresh-btn:hover {
-            background-color: #0056b3;
-        }
-
-        .refresh-btn:active {
-            transform: scale(0.98);
+        .timer-visible {
+            height: auto;
+            margin-top: 8px;
+            opacity: 1;
         }
 
         /* =========================================
-           MEDIA QUERIES (RESPONSIVIDADE CELULAR)
+           MOBILE RESPONSIVENESS
            ========================================= */
         @media (max-width: 768px) {
             body {
-                padding: 10px;
+                padding: 12px;
+                /* Tight padding */
             }
 
             .header {
                 flex-direction: column;
-                align-items: center;
-                gap: 10px;
-                margin-bottom: 15px;
+                gap: 12px;
+                margin-bottom: 20px;
+                text-align: center;
             }
 
             .header h1 {
                 font-size: 18px;
                 justify-content: center;
-                width: 100%;
             }
 
             .controls {
                 width: 100%;
-                justify-content: space-between;
-                gap: 10px;
+                justify-content: center;
             }
 
             .last-update {
                 font-size: 11px;
-                padding: 6px 10px;
-                flex-grow: 1;
-                justify-content: center;
+                padding: 6px 12px;
             }
 
             .refresh-btn {
-                padding: 8px 12px;
+                padding: 6px 14px;
                 font-size: 12px;
             }
 
             .grid {
+                /* STRICT 2-COLUMN GRID */
                 grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
+                gap: 10px;
             }
 
             .card {
-                padding: 8px;
+                padding: 12px;
+                /* Compact */
             }
 
             .unit-name {
                 font-size: 12px;
-                margin-bottom: 5px;
+                margin-bottom: 10px;
+                justify-content: center;
+            }
+
+            .unit-icon {
+                width: 14px;
+                height: 14px;
             }
 
             .status-badge {
-                padding: 6px 2px;
+                padding: 6px 4px;
                 font-size: 12px;
-                min-width: auto;
+                min-width: 0;
+                /* Allow shrink */
                 width: 100%;
-                box-sizing: border-box;
-                border-radius: 6px;
+                border-radius: 4px;
+                /* Sharper on mobile */
             }
 
-            .status-icon {
+            .icon-base {
                 width: 14px;
                 height: 14px;
-                margin-right: 4px;
-            }
-
-            .cart-icon {
-                width: 14px;
-                height: 14px;
-                margin-right: 4px;
-            }
-
-            .spinner {
-                width: 10px;
-                height: 10px;
-                border-width: 2px;
                 margin-right: 4px;
             }
         }
@@ -333,10 +353,17 @@
 <body>
 
     <div class="header">
-        <h1>🌐 Status de Conexão</h1>
+        <h1>🌐 Monitoramento <span style="font-weight:400; color:var(--text-secondary); margin-left: 5px;">INTECS</span>
+        </h1>
         <div class="controls">
-            <div id="last-update" class="last-update">Carregando data...</div>
-            <button onclick="atualizarStatus()" class="refresh-btn">↻ Atualizar</button>
+            <div id="last-update" class="last-update">...</div>
+            <button onclick="atualizarStatus()" class="refresh-btn">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15">
+                    </path>
+                </svg>
+                Atualizar
+            </button>
         </div>
     </div>
 
@@ -348,7 +375,7 @@
         const SHOW_TIMER_DELAY_MS = 10000; // 10 segundos
 
         const svgCalendar = `
-            <svg class="calendar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="icon-base" style="margin-right:4px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                 <line x1="16" y1="2" x2="16" y2="6"></line>
                 <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -356,8 +383,9 @@
             </svg>
         `;
 
-        const svgCart = `
-            <svg class="cart-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        // Shopping Cart icon for Markets
+        const svgUnit = `
+            <svg class="icon-base unit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="9" cy="21" r="1"></circle>
                 <circle cx="20" cy="21" r="1"></circle>
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
@@ -365,14 +393,13 @@
         `;
 
         const svgOnline = `
-            <svg class="status-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            <svg class="icon-base" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
         `;
 
         const svgOffline = `
-            <svg class="status-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="icon-base" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="15" y1="9" x2="9" y2="15"></line>
                 <line x1="9" y1="9" x2="15" y2="15"></line>
@@ -397,7 +424,7 @@
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
-                    <div class="unit-name">${svgCart} ${unidade.nome}</div>
+                    <div class="unit-name">${svgUnit} ${unidade.nome}</div>
                     <div id="status-${index}" class="status-badge status-loading">
                         <span class="spinner"></span> Verificando...
                     </div>
@@ -440,7 +467,10 @@
                 hour: '2-digit', minute: '2-digit', second: '2-digit'
             });
 
-            document.getElementById('last-update').innerHTML = `${svgCalendar} ${dataHora}`;
+            const lastUpdateElem = document.getElementById('last-update');
+            if (lastUpdateElem) {
+                lastUpdateElem.innerHTML = `${svgCalendar} ${dataHora}`;
+            }
 
             unidades.forEach(async (unidade, index) => {
                 const elementoStatus = document.getElementById(`status-${index}`);
