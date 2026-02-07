@@ -357,6 +357,9 @@
         </h1>
         <div class="controls">
             <div id="last-update" class="last-update">...</div>
+            <button onclick="testarTelegram()" class="refresh-btn" style="background-color: #f59e0b; margin-right:5px;">
+                📢 Testar Bot
+            </button>
             <button onclick="atualizarStatus()" class="refresh-btn">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                     <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15">
@@ -407,7 +410,7 @@
         `;
 
         const unidades = [
-            { nome: "SÃO MIGUEL", url: "http://invalid-url-test-fail.com" },
+            { nome: "SÃO MIGUEL", url: "http://ssintecsbr.ddns.com.br:3000/api/public/dashboard/d1f43c3c-459b-4eaf-a5cb-c1b4dbfd00fd/dashcard/3443/card/1545" },
             { nome: "CITY JARAGUÁ", url: "http://ssintecsbr.ddns.com.br:3000/api/public/dashboard/d1f43c3c-459b-4eaf-a5cb-c1b4dbfd00fd/dashcard/3434/card/1543" },
             { nome: "JARAGUÁ", url: "http://ssintecsbr.ddns.com.br:3000/api/public/dashboard/d1f43c3c-459b-4eaf-a5cb-c1b4dbfd00fd/dashcard/3445/card/1546" },
             { nome: "BRASILÂNDIA", url: "http://ssintecsbr.ddns.com.br:3000/api/public/dashboard/d1f43c3c-459b-4eaf-a5cb-c1b4dbfd00fd/dashcard/3435/card/1544" },
@@ -502,21 +505,24 @@
                 const isOnline = await checkUnitStatus(unidade.url);
 
                 // --- SISTEMA DE NOTIFICAÇÃO (Alteração de Status) ---
-                // Verifica se temos um estado anterior salvo
-                if (statusAnterior[unidade.nome] !== undefined) {
-                    // Se o status mudou
-                    if (statusAnterior[unidade.nome] !== isOnline) {
-                        if (isOnline) {
-                            // Voltou a ficar Online
-                            notifyTelegram(unidade.nome, "ONLINE");
-                        } else {
-                            // Caiu (Ficou Offline)
-                            notifyTelegram(unidade.nome, "OFFLINE");
-                        }
+                // Recupera status salvo no LocalStorage
+                const savedStatus = localStorage.getItem(`status_${unidade.nome}`);
+                const currentStatusStr = String(isOnline);
+
+                // Se temos um status salvo e ele é diferente do atual
+                if (savedStatus !== null && savedStatus !== currentStatusStr) {
+                    if (isOnline) {
+                        notifyTelegram(unidade.nome, "ONLINE");
+                    } else {
+                        notifyTelegram(unidade.nome, "OFFLINE");
                     }
+                } else if (savedStatus === null) {
+                    // Primeira execução: apenas salva
+                    console.log(`Status inicial salvo para ${unidade.nome}: ${isOnline}`);
                 }
-                // Atualiza o estado anterior
-                statusAnterior[unidade.nome] = isOnline;
+
+                // Salva o novo status
+                localStorage.setItem(`status_${unidade.nome}`, currentStatusStr);
                 // ----------------------------------------------------
 
                 // 4. Limpa Timers
@@ -536,23 +542,50 @@
             });
         }
 
-        // Estado anterior das unidades para detectar mudanças
-        let statusAnterior = {};
+        // TELEGRAM CONFIG (Client-Side)
+        const TELEGRAM_BOT_TOKEN = "8277634336:AAFVjzG-4dkBEAnld5xU8amKhX7xkUy_wcs";
+        const TELEGRAM_CHAT_ID = "5952530884";
 
         async function notifyTelegram(unitName, newStatus) {
-            const icon = newStatus === "ONLINE" ? "🟢" : "🔴";
-            const text = newStatus === "ONLINE" ? "VOLTOU!" : "CAIU!";
-            const message = `${icon} *ALERTA INTECS*\n\nA unidade *${unitName}* está *${newStatus}*.\nStatus: ${text}`;
+            let message = "";
+            if (newStatus === "ONLINE") {
+                message = `🟢 ${unitName} está ONLINE!`;
+            } else {
+                message = `🔴 ${unitName} está OFFLINE!`;
+            }
 
-            console.log(`Enviando notificação: ${unitName} -> ${newStatus}`);
+            console.log(`[Telegram] Enviando: ${unitName} -> ${newStatus}`);
 
             try {
-                // Chama a API serverless (api/telegram.js)
-                await fetch(`/api/telegram?message=${encodeURIComponent(message)}`);
+                // Direct call to Telegram API
+                const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: TELEGRAM_CHAT_ID,
+                        text: message
+                    })
+                });
+
+                const data = await response.json();
+                if (!data.ok) {
+                    console.error("Erro API Telegram:", data);
+                } else {
+                    console.log("Notificação enviada com sucesso!");
+                }
             } catch (e) {
-                console.error("Falha ao enviar Telegram:", e);
+                console.error("Erro de Rede Telegram:", e);
             }
         }
+
+        // Função para Teste Manual de Notificação
+        window.testarTelegram = function () {
+            if (confirm("Deseja enviar uma mensagem de teste para o Telegram?")) {
+                notifyTelegram("TESTE MANUAL", "OFFLINE");
+                alert("Teste enviado! Verifique o Telegram.");
+            }
+        };
 
         renderizarCards();
         atualizarStatus();
