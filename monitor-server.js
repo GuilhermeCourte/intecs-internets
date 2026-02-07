@@ -72,6 +72,22 @@ async function checkUnit(unit) {
 }
 
 async function runMonitor() {
+    // -------------------------------------------------------------
+    // BUSINESS LOGIC: Only run 06:00 - 22:00 BRT
+    // -------------------------------------------------------------
+    const formatter = new Intl.DateTimeFormat('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
+        hour: 'numeric',
+        hour12: false
+    });
+    const currentHour = parseInt(formatter.format(new Date()));
+
+    if (currentHour < 6 || currentHour >= 22) {
+        console.log(`[SLEEP] Fora do horário (Agora: ${currentHour}h). Monitorando apenas 06h-22h.`);
+        return; // Exit early
+    }
+    // -------------------------------------------------------------
+
     console.log(`\n--- Rodando Monitoramento: ${new Date().toLocaleString()} ---`);
     const lastStatus = loadStatus();
     const currentStatus = { ...lastStatus };

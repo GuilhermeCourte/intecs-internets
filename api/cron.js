@@ -1,6 +1,21 @@
 export default async function handler(request, response) {
-    // Security: Only allow Vercel Cron to invoke this (optional but good practice)
-    // For now, we open it so we can test it manually via browser too.
+    // -------------------------------------------------------------
+    // BUSINESS LOGIC: Only run 06:00 - 22:00 BRT
+    // -------------------------------------------------------------
+    const formatter = new Intl.DateTimeFormat('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
+        hour: 'numeric',
+        hour12: false
+    });
+    const currentHour = parseInt(formatter.format(new Date()));
+
+    if (currentHour < 6 || currentHour >= 22) {
+        return response.status(200).json({
+            status: "SLEEPING",
+            message: `Outside operating hours (Current BRT: ${currentHour}h). Only runs 06-22.`
+        });
+    }
+    // -------------------------------------------------------------
 
     const TELEGRAM_BOT_TOKEN = "8277634336:AAFVjzG-4dkBEAnld5xU8amKhX7xkUy_wcs";
     const TELEGRAM_CHAT_ID = "5952530884";
